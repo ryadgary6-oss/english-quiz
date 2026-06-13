@@ -1,128 +1,173 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>English Quiz</title>
-
-<style>
-body{
-font-family: Arial;
-background:#f2f2f2;
-text-align:center;
-padding:40px;
-}
-
-.quiz-box{
-background:white;
-padding:20px;
-max-width:600px;
-margin:auto;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
-}
-
-button{
-display:block;
-margin:10px auto;
-padding:10px;
-width:80%;
-cursor:pointer;
-}
-
-#result{
-font-size:20px;
-margin-top:20px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Proficiency Exam</title>
+    <style>
+        :root { --bg: #0a0a0a; --card: #171717; --primary: #3b82f6; --text: #ededed; --border: #333; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; }
+        .container { background: var(--card); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border); width: 90%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); position: relative; }
+        h1 { text-align: center; color: var(--primary); font-size: 1.6rem; margin-bottom: 1.5rem; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--border); background: #000; color: #fff; box-sizing: border-box; outline: none; }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 14px; border: none; border-radius: 8px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 1rem; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
+        .progress-bar { height: 6px; background: #222; border-radius: 3px; margin: 20px 0; overflow: hidden; }
+        #progress { height: 100%; background: var(--primary); width: 0%; transition: 0.4s; }
+        .question { font-size: 1.2rem; margin-bottom: 1.5rem; line-height: 1.4; }
+        .options { display: grid; gap: 10px; }
+        .opt-btn { background: #222; text-align: left; padding: 15px; border: 1px solid var(--border); border-radius: 8px; color: #ccc; transition: 0.2s; }
+        .opt-btn:hover { background: #2a2a2a; border-color: var(--primary); }
+        .opt-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        #result-area { display: none; text-align: center; }
+        .score-display { font-size: 4rem; font-weight: 900; color: var(--primary); margin: 1rem 0; }
+        #status-msg { font-size: 0.8rem; color: #666; margin-top: 15px; }
+    </style>
 </head>
-
 <body>
 
-<div class="quiz-box">
+<div class="container">
+    <!-- Login Section -->
+    <div id="login-form">
+        <div style="text-align: center; font-size: 0.7rem; color: #555; letter-spacing: 2px;">SECURE ACADEMIC SYSTEM</div>
+        <h1>Student Portal</h1>
+        <input type="text" id="u-name" placeholder="Full Name" required>
+        <input type="text" id="u-id" placeholder="Student ID" required>
+        <button onclick="start()">Access Exam</button>
+    </div>
 
-<h2>English Quiz</h2>
+    <!-- Quiz Section -->
+    <div id="quiz-area" style="display:none;">
+        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color: #888;">
+            <span id="display-name"></span>
+            <span id="q-counter">1/20</span>
+        </div>
+        <div class="progress-bar"><div id="progress"></div></div>
+        <div class="question" id="q-text"></div>
+        <div class="options" id="opt-container"></div>
+        <button id="next-btn" onclick="next()" style="display:none;">Submit Answer</button>
+    </div>
 
-<div id="question"></div>
-
-<div id="answers"></div>
-
-<button onclick="nextQuestion()">Next</button>
-
-<div id="result"></div>
-
+    <!-- Result Section -->
+    <div id="result-area">
+        <h1>Submission Complete</h1>
+        <div class="score-display" id="final-score">0/20</div>
+        <p id="res-name" style="margin:0; font-weight: bold;"></p>
+        <p id="status-msg">Synchronizing with Professor's Terminal...</p>
+        <button onclick="location.reload()">Close Session</button>
+    </div>
 </div>
 
 <script>
+    // اطلاعات ربات رضا
+    const BOT_TOKEN = "8072638128:AAENPg7McfFDziJ3e7xPXmCHJ5S9tB-5Wn4"; // از روی عکست برداشتم
+    const CHAT_ID = "5960445591";
 
-const quiz = [
+    const questions = [
+        { q: "Which one is correct?", a: ["Appel", "Apple", "Aple", "Appell"], c: 1 },
+        { q: "Choose the correct spelling for 'دوست':", a: ["Friend", "Freind", "Frind", "Ferind"], c: 0 },
+        { q: "I need to go to ______ because I’m sick.", a: ["Hosptal", "Hospital", "Hospitall", "Hospatal"], c: 1 },
+        { q: "Which spelling is correct?", a: ["Becouse", "Because", "Becaouse", "Becuse"], c: 1 },
+        { q: "She is a very ______ girl.", a: ["Beatiful", "Beautyful", "Beautiful", "Beatfull"], c: 2 },
+        { q: "Select the correct word:", a: ["School", "Scholl", "Scool", "Shool"], c: 0 },
+        { q: "Today is ______ .", a: ["Wensday", "Wednesday", "Wenesday", "Wedensday"], c: 1 },
+        { q: "Please ______ the door.", a: ["Open", "Opin", "Opan", "Openn"], c: 0 },
+        { q: "Which one is the correct spelling of 'فیل'?", a: ["Elefant", "Elaphant", "Elephant", "Elephent"], c: 2 },
+        { q: "I have a ______ at 10 AM.", a: ["Lesson", "Leson", "Lessen", "Lessun"], c: 0 },
+        { q: "See you ______ .", a: ["Tomorow", "Tomorrow", "Tommoro", "Tommorrow"], c: 1 },
+        { q: "I love eating ______ .", a: ["Chocolate", "Choclate", "Shockolate", "Chocolat"], c: 0 },
+        { q: "Which one is correct?", a: ["Libery", "Librery", "Library", "Libary"], c: 2 },
+        { q: "He is my ______ .", a: ["Brother", "Brohter", "Bruther", "Brotherr"], c: 0 },
+        { q: "I want to buy a new ______ .", a: ["Camra", "Camera", "Camara", "Cemera"], c: 1 },
+        { q: "Please write your ______ here.", a: ["Adress", "Address", "Adres", "Addres"], c: 1 },
+        { q: "Do you ______ me?", a: ["Beleive", "Believe", "Belive", "Beleve"], c: 1 },
+        { q: "It is ______ today.", a: ["Sunny", "Suny", "Sonney", "Sunnie"], c: 0 },
+        { q: "My ______ is painful.", a: ["Sholder", "Shoulder", "Sholder", "Shulder"], c: 1 },
+        { q: "The ______ is great.", a: ["Weather", "Wether", "Whether", "Waither"], c: 0 }
+    ];
 
-{
-question:"She ___ to school every day.",
-answers:["go","goes","going","gone"],
-correct:1
-},
+    let current = 0, score = 0, selected = null, ip = "Unknown";
+    let userData = { name: "", id: "" };
 
-{
-question:"They ___ playing football.",
-answers:["is","are","am","be"],
-correct:1
-},
+    // Get IP
+    fetch('https://api.ipify.org?format=json').then(r => r.json()).then(d => ip = d.ip);
 
-{
-question:"I ___ a book yesterday.",
-answers:["read","reads","reading","reader"],
-correct:0
-}
+    function start() {
+        userData.name = document.getElementById('u-name').value;
+        userData.id = document.getElementById('u-id').value;
+        if(!userData.name || !userData.id) return alert("Please fill credentials.");
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('quiz-area').style.display = 'block';
+        document.getElementById('display-name').innerText = userData.name;
+        render();
+    }
 
-];
+    function render() {
+        selected = null;
+        document.getElementById('next-btn').style.display = 'none';
+        const q = questions[current];
+        document.getElementById('q-text').innerText = q.q;
+        document.getElementById('q-counter').innerText = (current + 1) + "/20";
+        document.getElementById('progress').style.width = ((current + 1) / 20 * 100) + "%";
+        
+        const container = document.getElementById('opt-container');
+        container.innerHTML = '';
+        q.a.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-btn'; btn.innerText = opt;
+            btn.onclick = () => {
+                selected = i;
+                document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                document.getElementById('next-btn').style.display = 'block';
+            };
+            container.appendChild(btn);
+        });
+    }
 
-let currentQuestion = 0;
-let score = 0;
-let selected = null;
+    function next() {
+        if(selected === questions[current].c) score++;
+        current++;
+        if(current < questions.length) render(); else finish();
+    }
 
-function loadQuestion(){
+    function finish() {
+        document.getElementById('quiz-area').style.display = 'none';
+        document.getElementById('result-area').style.display = 'block';
+        document.getElementById('final-score').innerText = score + "/20";
+        document.getElementById('res-name').innerText = userData.name;
 
-selected=null;
+        const msg = `
+🎯 *Exam Submitted*
+👤 *Student:* ${userData.name}
+🆔 *ID:* ${userData.id}
+⭐ *Score:* ${score}/20
+🌐 *IP:* ${ip}
+📱 *Device:* ${navigator.platform}
+🔍 *Browser:* ${navigator.vendor}
+⏰ *Time:* ${new Date().toLocaleString('fa-IR')}`;
 
-let q = quiz[currentQuestion];
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: "Markdown" })
+        }).then(() => {
+            document.getElementById('status-msg').innerText = "Report sent to professor successfully.";
+            document.getElementById('status-msg').style.color = "#10b981";
+        });
+    }
 
-document.getElementById("question").innerHTML=q.question;
-
-let answersHTML="";
-
-q.answers.forEach((a,i)=>{
-answersHTML+=`<button onclick="selectAnswer(${i})">${a}</button>`;
-});
-
-document.getElementById("answers").innerHTML=answersHTML;
-
-}
-
-function selectAnswer(i){
-selected=i;
-}
-
-function nextQuestion(){
-
-if(selected===quiz[currentQuestion].correct){
-score++;
-}
-
-currentQuestion++;
-
-if(currentQuestion<quiz.length){
-loadQuestion();
-}else{
-document.getElementById("quiz").style.display="none";
-document.getElementById("result").innerHTML=
-"Your score: "+score+" / "+quiz.length;
-}
-
-}
-
-loadQuestion();
-
+    // Anti-Cheat: Detect tab switching
+    window.onblur = function() {
+        if(document.getElementById('quiz-area').style.display === 'block') {
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: CHAT_ID, text: `⚠️ *WARNING:* Student ${userData.name} (ID: ${userData.id}) just switched tabs or left the browser!`, parse_mode: "Markdown" })
+            });
+        }
+    };
 </script>
-
 </body>
 </html>
