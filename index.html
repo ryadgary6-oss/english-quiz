@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>English Quiz</title>
+
+<style>
+body{
+font-family: Arial;
+background:#f2f2f2;
+text-align:center;
+padding:40px;
+}
+
+.quiz-box{
+background:white;
+padding:20px;
+max-width:600px;
+margin:auto;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+button{
+display:block;
+margin:10px auto;
+padding:10px;
+width:80%;
+cursor:pointer;
+}
+
+#result{
+font-size:20px;
+margin-top:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="quiz-box">
+
+<h2>English Quiz</h2>
+
+<div id="question"></div>
+
+<div id="answers"></div>
+
+<button onclick="nextQuestion()">Next</button>
+
+<div id="result"></div>
+
+</div>
+
+<script>
+
+const quiz = [
+
+{
+question:"She ___ to school every day.",
+answers:["go","goes","going","gone"],
+correct:1
+},
+
+{
+question:"They ___ playing football.",
+answers:["is","are","am","be"],
+correct:1
+},
+
+{
+question:"I ___ a book yesterday.",
+answers:["read","reads","reading","reader"],
+correct:0
+}
+
+];
+
+let currentQuestion = 0;
+let score = 0;
+let selected = null;
+
+function loadQuestion(){
+
+selected=null;
+
+let q = quiz[currentQuestion];
+
+document.getElementById("question").innerHTML=q.question;
+
+let answersHTML="";
+
+q.answers.forEach((a,i)=>{
+answersHTML+=`<button onclick="selectAnswer(${i})">${a}</button>`;
+});
+
+document.getElementById("answers").innerHTML=answersHTML;
+
+}
+
+function selectAnswer(i){
+selected=i;
+}
+
+function nextQuestion(){
+
+if(selected===quiz[currentQuestion].correct){
+score++;
+}
+
+currentQuestion++;
+
+if(currentQuestion<quiz.length){
+loadQuestion();
+}else{
+document.getElementById("quiz").style.display="none";
+document.getElementById("result").innerHTML=
+"Your score: "+score+" / "+quiz.length;
+}
+
+}
+
+loadQuestion();
+
+</script>
+
+</body>
+</html>
