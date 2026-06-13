@@ -1,107 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>English Quiz</title>
+<style>
+body { font-family: Arial, sans-serif; background: #0f172a; color: white; text-align: center; padding: 40px; }
+.container { max-width: 700px; margin: auto; background: #1e293b; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+input { padding: 12px; margin: 10px auto; width: 80%; border-radius: 6px; border: 1px solid #475569; background: #1e293b; color: white; }
+button { padding: 12px 20px; margin: 10px 5px; border: none; border-radius: 6px; background: #3b82f6; color: white; cursor: pointer; transition: background 0.3s ease; font-size: 16px; }
+button:hover { background: #2563eb; }
+.opt { display: block; width: 100%; margin: 10px 0; background: #334155; text-align: left; padding-left: 15px; }
+.opt:hover { background: #475569; }
+.selected { background: #22c55e !important; }
+#progress { height: 10px; background: #22c55e; width: 0%; border-radius: 5px; margin-bottom: 20px; transition: width 0.5s ease; }
+#qnum { color: #94a3b8; font-size: 14px; margin-bottom: 10px; }
+#question { font-size: 18px; margin-bottom: 25px; }
+#options { margin-top: 20px; }
+#next { background: #10b981; }
+#next:hover { background: #047857; }
+#result { padding: 20px; }
+#score { font-size: 24px; font-weight: bold; color: #22c55e; margin-bottom: 15px; }
+#status-msg { margin-top: 15px; font-style: italic; color: #94a3b8; }
+#debug { margin-top: 30px; color: #facc15; font-size: 12px; white-space: pre-line; text-align: left; border: 1px dashed #facc15; padding: 15px; border-radius: 8px; background: rgba(250, 204, 21, 0.1); }
+.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>English Quiz</h2>
+
+<div id="login">
+<input type="text" id="name" placeholder="Your Name">
+<input type="text" id="sid" placeholder="Student ID">
+<button onclick="startExam()">Start Exam</button>
+<button onclick="testSheetConnection()">Test Connection to Google Sheet</button>
+</div>
+
+<div id="quiz" class="hidden">
+<div id="progress"></div>
+<div id="qnum"></div>
+<p id="question"></p>
+<div id="options"></div>
+<button id="nextBtn" class="hidden" onclick="nextQuestion()">Next</button>
+</div>
+
+<div id="result" class="hidden">
+<h2>Quiz Finished!</h2>
+<p id="scoreResult"></p>
+<p id="status-msg"></p>
+</div>
+
+<div id="debug"></div>
+</div>
+
 <script>
-    // اطلاعات جدید رضا - آپدیت شده
-    const BOT_TOKEN = "8726381288:AAENpg7MfcfFDziJ3e7xP1_cnLuwexmasco"; 
-    const CHAT_ID = "5960445591";
+// --- Configuration ---
+// Replace with your actual Google Apps Script Web App URL
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbzlk0HwKM2ixXX5PyKpk4LabuyKYKPflBEDebmpNk651O6DBU9wHjiJpZWS23TtuK1f/exec"; 
 
-    const questions = [
-        { q: "Which one is correct?", a: ["Appel", "Apple", "Aple", "Appell"], c: 1 },
-        { q: "Choose the correct spelling for 'دوست':", a: ["Friend", "Freind", "Frind", "Ferind"], c: 0 },
-        { q: "I need to go to ______ because I’m sick.", a: ["Hosptal", "Hospital", "Hospitall", "Hospatal"], c: 1 },
-        { q: "Which spelling is correct?", a: ["Becouse", "Because", "Becaouse", "Becuse"], c: 1 },
-        { q: "She is a very ______ girl.", a: ["Beatiful", "Beautyful", "Beautiful", "Beatfull"], c: 2 },
-        { q: "Select the correct word:", a: ["School", "Scholl", "Scool", "Shool"], c: 0 },
-        { q: "Today is ______ .", a: ["Wensday", "Wednesday", "Wenesday", "Wedensday"], c: 1 },
-        { q: "Please ______ the door.", a: ["Open", "Opin", "Opan", "Openn"], c: 0 },
-        { q: "Which one is the correct spelling of 'فیل'?", a: ["Elefant", "Elaphant", "Elephant", "Elephent"], c: 2 },
-        { q: "I have a ______ at 10 AM.", a: ["Lesson", "Leson", "Lessen", "Lessun"], c: 0 },
-        { q: "See you ______ .", a: ["Tomorow", "Tomorrow", "Tommoro", "Tommorrow"], c: 1 },
-        { q: "I love eating ______ .", a: ["Chocolate", "Choclate", "Shockolate", "Chocolat"], c: 0 },
-        { q: "Which one is correct?", a: ["Libery", "Librery", "Library", "Libary"], c: 2 },
-        { q: "He is my ______ .", a: ["Brother", "Brohter", "Bruther", "Brotherr"], c: 0 },
-        { q: "I want to buy a new ______ .", a: ["Camra", "Camera", "Camara", "Cemera"], c: 1 },
-        { q: "Please write your ______ here.", a: ["Adress", "Address", "Adres", "Addres"], c: 1 },
-        { q: "Do you ______ me?", a: ["Beleive", "Believe", "Belive", "Beleve"], c: 1 },
-        { q: "It is ______ today.", a: ["Sunny", "Suny", "Sonney", "Sunnie"], c: 0 },
-        { q: "My ______ is painful.", a: ["Sholder", "Shoulder", "Sholder", "Shulder"], c: 1 },
-        { q: "The ______ is great.", a: ["Weather", "Wether", "Whether", "Waither"], c: 0 }
-    ];
+const questions = [
+    {q:"Which word is spelled correctly?", a:["Appel", "Apple", "Aple", "Appell"], c:1},
+    {q:"Choose the correct spelling for 'دوست':", a:["Friend", "Freind", "Frind", "Ferind"], c:0},
+    {q:"I need to go to ______ because I’m sick.", a:["Hosptal", "Hospital", "Hospitall", "Hospatal"], c:1},
+    {q:"Which spelling is correct?", a:["Becouse", "Because", "Becaouse", "Becuse"], c:1},
+    {q:"She is a very ______ girl.", a:["Beatiful", "Beautyful", "Beautiful", "Beatfull"], c:2},
+    {q:"Select the correct word:", a:["School", "Scholl", "Scool", "Shool"], c:0},
+    {q:"Today is ______ .", a:["Wensday", "Wednesday", "Wenesday", "Wedensday"], c:1},
+    {q:"Please ______ the door.", a:["Open", "Opin", "Opan", "Openn"], c:0},
+    {q:"Which one is the correct spelling of 'فیل'?", a:["Elefant", "Elaphant", "Elephant", "Elephent"], c:2},
+    {q:"I have a ______ at 10 AM.", a:["Lesson", "Leson", "Lessen", "Lessun"], c:0},
+    {q:"See you ______ .", a:["Tomorow", "Tomorrow", "Tommoro", "Tommorrow"], c:1},
+    {q:"I love eating ______ .", a:["Chocolate", "Choclate", "Shockolate", "Chocolat"], c:0},
+    {q:"Which one is correct?", a:["Libery", "Librery", "Library", "Libary"], c:2},
+    {q:"He is my ______ .", a:["Brother", "Brohter", "Bruther", "Brotherr"], c:0},
+    {q:"I want to buy a new ______ .", a:["Camra", "Camera", "Camara", "Cemera"], c:1},
+    {q:"Please write your ______ here.", a:["Adress", "Address", "Adres", "Addres"], c:1},
+    {q:"Do you ______ me?", a:["Beleive", "Believe", "Belive", "Beleve"], c:1},
+    {q:"It is ______ today.", a:["Sunny", "Suny", "Sonney", "Sunnie"], c:0},
+    {q:"My ______ is painful.", a:["Sholder", "Shoulder", "Sholder", "Shulder"], c:1},
+    {q:"The ______ is great.", a:["Weather", "Wether", "Whether", "Waither"], c:0}
+];
 
-    let current = 0, score = 0, selected = null, ip = "Unknown";
-    let userData = { name: "", id: "" };
+// --- Global Variables ---
+let currentQuestionIndex = 0;
+let score = 0;
+let selectedAnswerIndex = null;
+let studentName = "";
+let studentId = "";
+let userIp = "Unknown";
+let studentData = {}; // To store all student data before sending
 
-    fetch('https://api.ipify.org?format=json').then(r => r.json()).then(d => ip = d.ip).catch(() => ip = "Hidden/VPN");
+// --- DOM Elements ---
+const loginForm = document.getElementById('login');
+const quizArea = document.getElementById('quiz');
+const resultArea = document.getElementById('result');
+const debugDiv = document.getElementById('debug');
 
-    function start() {
-        userData.name = document.getElementById('u-name').value;
-        userData.id = document.getElementById('u-id').value;
-        if(!userData.name || !userData.id) return alert("Please fill credentials.");
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('quiz-area').style.display = 'block';
-        document.getElementById('display-name').innerText = userData.name;
-        render();
-    }
+// --- Logging Function ---
+function log(message) {
+    debugDiv.innerHTML += message + "\n";
+    console.log(message);
+}
 
-    function render() {
-        selected = null;
-        document.getElementById('next-btn').style.display = 'none';
-        const q = questions[current];
-        document.getElementById('q-text').innerText = q.q;
-        document.getElementById('q-counter').innerText = (current + 1) + "/20";
-        document.getElementById('progress').style.width = ((current + 1) / 20 * 100) + "%";
-        
-        const container = document.getElementById('opt-container');
-        container.innerHTML = '';
-        q.a.forEach((opt, i) => {
-            const btn = document.createElement('button');
-            btn.className = 'opt-btn'; btn.innerText = opt;
-            btn.onclick = () => {
-                selected = i;
-                document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                document.getElementById('next-btn').style.display = 'block';
-            };
-            container.appendChild(btn);
+// --- Initialize ---
+window.onload = () => {
+    log("Page loaded. Initializing...");
+    // Get IP address
+    fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+            userIp = data.ip;
+            log(`IP address detected: ${userIp}`);
+        })
+        .catch(error => {
+            log(`Error detecting IP: ${error}`);
+            userIp = "Error";
         });
+};
+
+// --- Start Exam ---
+function startExam() {
+    studentName = document.getElementById('name').value.trim();
+    studentId = document.getElementById('sid').value.trim();
+
+    if (!studentName || !studentId) {
+        alert("Please enter your name and Student ID.");
+        return;
     }
 
-    function next() {
-        if(selected === questions[current].c) score++;
-        current++;
-        if(current < questions.length) render(); else finish();
+    log(`Starting exam for ${studentName} (ID: ${studentId})`);
+    loginForm.classList.add('hidden');
+    quizArea.classList.remove('hidden');
+    renderQuestion();
+}
+
+// --- Render Current Question ---
+function renderQuestion() {
+    selectedAnswerIndex = null; // Reset selection for new question
+    const qNumDisplay = document.getElementById('qnum');
+    const questionText = document.getElementById('question');
+    const optionsContainer = document.getElementById('options');
+    const nextButton = document.getElementById('nextBtn');
+    const progressBar = document.getElementById('progress');
+
+    const currentQuestion = questions[currentQuestionIndex];
+
+    qNumDisplay.innerText = `Question ${(currentQuestionIndex + 1)}/${questions.length}`;
+    questionText.innerText = currentQuestion.q;
+    
+    // Update progress bar
+    const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+    progressBar.style.width = `${progressPercentage}%`;
+
+    optionsContainer.innerHTML = ''; // Clear previous options
+
+    currentQuestion.a.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.className = 'opt';
+        button.innerText = option;
+        button.onclick = () => selectAnswer(index, button);
+        optionsContainer.appendChild(button);
+    });
+
+    nextButton.classList.add('hidden'); // Hide next button until an answer is selected
+}
+
+// --- Select Answer ---
+function selectAnswer(index, button) {
+    selectedAnswerIndex = index;
+    // Remove 'selected' class from all buttons
+    document.querySelectorAll('.opt').forEach(btn => btn.classList.remove('selected'));
+    // Add 'selected' class to the clicked button
+    button.classList.add('selected');
+    document.getElementById('nextBtn').classList.remove('hidden'); // Show next button
+}
+
+// --- Next Question ---
+function nextQuestion() {
+    if (selectedAnswerIndex === null) {
+        alert("Please select an answer first!");
+        return;
     }
 
-    function finish() {
-        document.getElementById('quiz-area').style.display = 'none';
-        document.getElementById('result-area').style.display = 'block';
-        document.getElementById('final-score').innerText = score + "/20";
-        document.getElementById('res-name').innerText = userData.name;
-
-        const msg = `
-🎯 *Exam Submitted*
-👤 *Student:* ${userData.name}
-🆔 *ID:* ${userData.id}
-⭐ *Score:* ${score}/20
-🌐 *IP:* ${ip}
-📱 *Device:* ${navigator.platform}
-⏰ *Time:* ${new Date().toLocaleString('fa-IR')}`;
-
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: "Markdown" })
-        }).then(() => {
-            document.getElementById('status-msg').innerText = "Report sent successfully.";
-            document.getElementById('status-msg').style.color = "#10b981";
-        });
+    // Check if the selected answer is correct
+    if (selectedAnswerIndex === questions[currentQuestionIndex].c) {
+        score++;
+        log(`Correct answer for Q${(currentQuestionIndex + 1)}`);
+    } else {
+        log(`Wrong answer for Q${(currentQuestionIndex + 1)}. Correct was index ${questions[currentQuestionIndex].c}`);
     }
 
-    window.onblur = function() {
-        if(document.getElementById('quiz-area').style.display === 'block') {
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: CHAT_ID, text: `⚠️ *CHEAT ALERT:* ${userData.name} left the page!`, parse_mode: "Markdown" })
-            });
-        }
+    currentQuestionIndex++;
+
+    if (currentQuestionIndex < questions.length) {
+        renderQuestion(); // Render next question
+    } else {
+        finishExam(); // End the quiz
+    }
+}
+
+// --- Finish Exam ---
+function finishExam() {
+    log("Exam finished. Calculating score...");
+    quizArea.classList.add('hidden');
+    resultArea.classList.remove('hidden');
+    document.getElementById('scoreResult').innerText = `Your Score: ${score}/${questions.length}`;
+    
+    // Prepare data for Google Sheet
+    studentData = {
+        name: studentName,
+        id: studentId,
+        score: `${score}/${questions.length}`,
+        ip: userIp,
+        device: navigator.platform,
+        time: new Date().toLocaleString('fa-IR') // Using Persian locale for date/time
     };
+
+    sendDataToSheet(studentData);
+}
+
+// --- Send Data to Google Sheet ---
+function sendDataToSheet(dataToSend) {
+    log("Attempting to send data to Google Sheet...");
+    fetch(SHEET_URL, {
+        method: 'POST',
+        body: JSON.stringify(dataToSend),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            log(`HTTP error! Status: ${response.status}`);
+            return response.text().then(text => { throw new Error(`Server responded with ${response.status}: ${text}`); });
+        }
+        return response.text();
+    })
+    .then(data => {
+        log(`Google Sheet response: ${data}`);
+        if (data === "success") {
+            document.getElementById('status-msg').innerText = "Your results have been successfully submitted!";
+            document.getElementById('status-msg').style.color = "#22c55e"; // Green
+        } else {
+            throw new Error("Submission did not return 'success'.");
+        }
+    })
+    .catch(error => {
+        log(`Error sending data to Google Sheet: ${error.message}`);
+        document.getElementById('status-msg').innerText = `Submission failed: ${error.message}. Please try again or contact admin.`;
+        document.getElementById('status-msg').style.color = "#ef4444"; // Red
+        // Optionally, you could try to send via Telegram here as a fallback
+    });
+}
+
+// --- Test Connection to Google Sheet ---
+function testSheetConnection() {
+    log("Testing connection to Google Sheet...");
+    const testData = {
+        name: "Test User",
+        id: "TEST123",
+        score: "N/A",
+        ip: userIp,
+        device: navigator.platform,
+        time: new Date().toLocaleString('fa-IR')
+    };
+
+    fetch(SHEET_URL, {
+        method: 'POST',
+        body: JSON.stringify(testData),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            log(`Test HTTP error! Status: ${response.status}`);
+            return response.text().then(text => { throw new Error(`Server responded with ${response.status}: ${text}`); });
+        }
+        return response.text();
+    })
+    .then(data => {
+        log(`Test response: ${data}`);
+        if (data === "success") {
+            alert("Test successful! Check your Google Sheet for 'Test User' entry.");
+            log("Test successful. Check Google Sheet.");
+        } else {
+            throw new Error("Test submission did not return 'success'.");
+        }
+    })
+    .catch(error => {
+        log(`Error during test submission: ${error.message}`);
+        alert(`Test failed: ${error.message}. Check the console (F12) or debug log for details.`);
+    });
+}
+
+// --- Anti-cheat: Detect tab switching ---
+window.addEventListener('blur', () => {
+    if (quizArea.classList.contains('hidden')) return; // Only trigger if quiz is active
+    log("User switched tabs or left the page!");
+    // You could send a notification to your sheet or a separate log here
+    // For simplicity, just logging for now. To send to sheet:
+     const cheatData = {
+        name: studentName || "Unknown Student", // Use name if available
+        id: studentId || "Unknown ID",
+        score: "Cheat Detected", // Mark as cheat
+        ip: userIp,
+        device: navigator.platform,
+        time: new Date().toLocaleString('fa-IR')
+    };
+    sendDataToSheet(cheatData); // Send this as a cheat alert
+    alert("Leaving the quiz page is not allowed and will be registered!");
+});
+
 </script>
+</body>
+</html>
