@@ -1,318 +1,436 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>English Quiz</title>
-<style>
-body { font-family: Arial, sans-serif; background: #0f172a; color: white; text-align: center; padding: 40px; }
-.container { max-width: 700px; margin: auto; background: #1e293b; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-input { padding: 12px; margin: 10px auto; width: 80%; border-radius: 6px; border: 1px solid #475569; background: #1e293b; color: white; }
-button { padding: 12px 20px; margin: 10px 5px; border: none; border-radius: 6px; background: #3b82f6; color: white; cursor: pointer; transition: background 0.3s ease; font-size: 16px; }
-button:hover { background: #2563eb; }
-.opt { display: block; width: 100%; margin: 10px 0; background: #334155; text-align: left; padding-left: 15px; }
-.opt:hover { background: #475569; }
-.selected { background: #22c55e !important; }
-#progress { height: 10px; background: #22c55e; width: 0%; border-radius: 5px; margin-bottom: 20px; transition: width 0.5s ease; }
-#qnum { color: #94a3b8; font-size: 14px; margin-bottom: 10px; }
-#question { font-size: 18px; margin-bottom: 25px; }
-#options { margin-top: 20px; }
-#next { background: #10b981; }
-#next:hover { background: #047857; }
-#result { padding: 20px; }
-#score { font-size: 24px; font-weight: bold; color: #22c55e; margin-bottom: 15px; }
-#status-msg { margin-top: 15px; font-style: italic; color: #94a3b8; }
-#debug { margin-top: 30px; color: #facc15; font-size: 12px; white-space: pre-line; text-align: left; border: 1px dashed #facc15; padding: 15px; border-radius: 8px; background: rgba(250, 204, 21, 0.1); }
-.hidden { display: none; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>آزمون آنلاین رض</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* استایل‌های اضافی یا اصلاحی در صورت نیاز */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+            text-align: right;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .question-block {
+            margin-top: 20px;
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: right;
+        }
+        .options label {
+            display: block;
+            background-color: #fdfdfd;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .options label:hover {
+            background-color: #f0f0f0;
+        }
+        .options input[type="radio"] {
+            margin-left: 10px;
+        }
+        .results-display {
+            margin-top: 30px;
+            font-size: 1.2em;
+            color: #27ae60;
+        }
+        #debug-log {
+            margin-top: 30px;
+            height: 150px;
+            overflow-y: scroll;
+            background-color: #333;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: left;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            direction: ltr; /* لاگ‌ها انگلیسی هستن */
+        }
+        #debug-log p {
+            margin: 5px 0;
+        }
+        /* استایل برای دکمه تست اتصال */
+        .test-connection-button {
+            background-color: #f39c12;
+            margin-top: 20px;
+        }
+        .test-connection-button:hover {
+            background-color: #e67e22;
+        }
+    </style>
 </head>
 <body>
 
-<div class="container">
-<h2>English Quiz</h2>
+    <div class="container">
+        <h1>سامانه آزمون آنلاین</h1>
 
-<div id="login">
-<input type="text" id="name" placeholder="Your Name">
-<input type="text" id="sid" placeholder="Student ID">
-<button onclick="startExam()">Start Exam</button>
-<button onclick="testSheetConnection()">Test Connection to Google Sheet</button>
-</div>
+        <div id="login-form">
+            <div class="input-group">
+                <label for="student-name">نام و نام خانوادگی:</label>
+                <input type="text" id="student-name" placeholder="مثال: رضا احمدی">
+            </div>
+            <div class="input-group">
+                <label for="student-id">شماره دانشجویی:</label>
+                <input type="text" id="student-id" placeholder="مثال: 987654321">
+            </div>
+            <button id="start-quiz-button">شروع آزمون</button>
+            <button class="test-connection-button" id="test-connection-button">تست اتصال به Google Sheet</button>
+        </div>
 
-<div id="quiz" class="hidden">
-<div id="progress"></div>
-<div id="qnum"></div>
-<p id="question"></p>
-<div id="options"></div>
-<button id="nextBtn" class="hidden" onclick="nextQuestion()">Next</button>
-</div>
+        <div id="quiz-area" style="display: none;">
+            <h2 id="question-title"></h2>
+            <div id="question-options" class="options">
+                <!-- Radio buttons will be generated here -->
+            </div>
+            <button id="next-question-button">سوال بعدی</button>
+            <button id="submit-quiz-button" style="display: none;">اتمام آزمون</button>
+        </div>
 
-<div id="result" class="hidden">
-<h2>Quiz Finished!</h2>
-<p id="scoreResult"></p>
-<p id="status-msg"></p>
-</div>
+        <div id="results-area" class="results-display" style="display: none;">
+            <!-- Results will be shown here -->
+        </div>
 
-<div id="debug"></div>
-</div>
+        <div id="debug-log">
+            <h3>لاگ‌های دیباگ:</h3>
+            <!-- Debug messages will appear here -->
+        </div>
+    </div>
 
-<script>
-// --- Configuration ---
-// Replace with your actual Google Apps Script Web App URL
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbyU-LnfmDXYFSkdKO4hkPzim7yG3pUZIebU7QYTwQFFx3-8mA4G0O74Of-BK2Z3lhksqg/exec"; // <<<--- URL به روز رسانی شد
+    <script>
+        // --- Global Variables ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswerIndex = null;
+        let studentName = "";
+        let studentId = "";
+        let userIp = "127.0.0.1"; // IP ثابت در صورت بروز خطا یا برای تست
+        let studentData = {}; // To store all student data before sending
 
-const questions = [
-    {q:"Which word is spelled correctly?", a:["Appel", "Apple", "Aple", "Appell"], c:1},
-    {q:"Choose the correct spelling for 'دوست':", a:["Friend", "Freind", "Frind", "Ferind"], c:0},
-    {q:"I need to go to ______ because I’m sick.", a:["Hosptal", "Hospital", "Hospitall", "Hospatal"], c:1},
-    {q:"Which spelling is correct?", a:["Becouse", "Because", "Becaouse", "Becuse"], c:1},
-    {q:"She is a very ______ girl.", a:["Beatiful", "Beautyful", "Beautiful", "Beatfull"], c:2},
-    {q:"Select the correct word:", a:["School", "Scholl", "Scool", "Shool"], c:0},
-    {q:"Today is ______ .", a:["Wensday", "Wednesday", "Wenesday", "Wedensday"], c:1},
-    {q:"Please ______ the door.", a:["Open", "Opin", "Opan", "Openn"], c:0},
-    {q:"Which one is the correct spelling of 'فیل'?", a:["Elefant", "Elaphant", "Elephant", "Elephent"], c:2},
-    {q:"I have a ______ at 10 AM.", a:["Lesson", "Leson", "Lessen", "Lessun"], c:0},
-    {q:"See you ______ .", a:["Tomorow", "Tomorrow", "Tommoro", "Tommorrow"], c:1},
-    {q:"I love eating ______ .", a:["Chocolate", "Choclate", "Shockolate", "Chocolat"], c:0},
-    {q:"Which one is correct?", a:["Libery", "Librery", "Library", "Libary"], c:2},
-    {q:"He is my ______ .", a:["Brother", "Brohter", "Bruther", "Brotherr"], c:0},
-    {q:"I want to buy a new ______ .", a:["Camra", "Camera", "Camara", "Cemera"], c:1},
-    {q:"Please write your ______ here.", a:["Adress", "Address", "Adres", "Addres"], c:1},
-    {q:"Do you ______ me?", a:["Beleive", "Believe", "Belive", "Beleve"], c:1},
-    {q:"It is ______ today.", a:["Sunny", "Suny", "Sonney", "Sunnie"], c:0},
-    {q:"My ______ is painful.", a:["Sholder", "Shoulder", "Sholder", "Shulder"], c:1},
-    {q:"The ______ is great.", a:["Weather", "Wether", "Whether", "Waither"], c:0}
-];
+        // <<<--- !!! مهم: این URL را با URL نهایی Web App خود در Google Apps Script جایگزین کنید !!! --->>>
+        const SHEET_URL = "https://script.google.com/macros/s/AKfycbwmpqRfCtQznj1rPYtt4J6klyURJ_6tE8OifiMbIswWe_dmav94iwnEVafYS5jyGxiUbw/exec"; // <<<--- URL به روز رسانی شد
 
-// --- Global Variables ---
-let currentQuestionIndex = 0;
-let score = 0;
-let selectedAnswerIndex = null;
-let studentName = "";
-let studentId = "";
-let userIp = "Unknown";
-let studentData = {}; // To store all student data before sending
+        // --- Sample Questions (replace with your actual questions) ---
+        const questions = [
+            {
+                question: "پایتخت ایران کجاست؟",
+                options: ["اصفهان", "تهران", "شیراز", "تبریز"],
+                answer: 1 // Index of the correct answer (0-based)
+            },
+            {
+                question: "بزرگترین اقیانوس جهان کدام است؟",
+                options: ["اطلس", "هند", "آرام", "منجمد شمالی"],
+                answer: 2
+            },
+            {
+                question: "واحد پول ژاپن چیست؟",
+                options: ["دلار", "یورو", "ین", "پوند"],
+                answer: 2
+            }
+            // Add more questions here...
+        ];
 
-// --- DOM Elements ---
-const loginForm = document.getElementById('login');
-const quizArea = document.getElementById('quiz');
-const resultArea = document.getElementById('result');
-const debugDiv = document.getElementById('debug');
+        // --- Functions ---
 
-// --- Logging Function ---
-function log(message) {
-    debugDiv.innerHTML += message + "\n";
-    console.log(message);
-}
+        // Function to log messages to the debug console
+        function log(message) {
+            const debugLog = document.getElementById('debug-log');
+            const p = document.createElement('p');
+            p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            debugLog.appendChild(p);
+            // Scroll to the bottom
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
 
-// --- Initialize ---
-window.onload = () => {
-    log("Page loaded. Initializing...");
-    // Get IP address
-    fetch('https://api.ipify.org?format=json')
-        .then(response => response.json())
-        .then(data => {
-            userIp = data.ip;
-            log(`IP address detected: ${userIp}`);
-        })
-        .catch(error => {
-            log(`Error detecting IP: ${error}`);
-            userIp = "Error";
+        // Function to handle the "Test Connection" button click
+        function testConnection() {
+            log("Testing connection to Google Sheet...");
+            fetch(SHEET_URL, {
+                method: 'POST',
+                mode: 'cors', // Important for cross-origin requests
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: "testConnection",
+                    timestamp: new Date().toISOString()
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Try to get error message from response body if possible
+                    return response.text().then(text => { throw new Error(`HTTP error! status: ${response.status}, message: ${text}`) });
+                }
+                return response.json();
+            })
+            .then(data => {
+                log("Connection test response: " + JSON.stringify(data));
+                if (data.message === "success") {
+                    log("Google Sheet connection successful!");
+                } else {
+                    log("Google Sheet connection failed. Response: " + JSON.stringify(data));
+                }
+            })
+            .catch(error => {
+                log(`Error during connection test: ${error.message}`);
+            });
+        }
+
+        // Function to send quiz data to Google Sheets
+        function sendDataToSheet() {
+            log("Submitting quiz data...");
+            studentData = {
+                name: studentName,
+                id: studentId,
+                ip: userIp, // Using the static IP
+                score: score,
+                totalQuestions: questions.length,
+                timestamp: new Date().toISOString()
+            };
+
+            fetch(SHEET_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(studentData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                     return response.text().then(text => { throw new Error(`HTTP error! status: ${response.status}, message: ${text}`) });
+                }
+                return response.json();
+            })
+            .then(data => {
+                log("Quiz submission response: " + JSON.stringify(data));
+                if (data.message === "success") {
+                    log("Quiz submitted successfully!");
+                    displayResults();
+                } else {
+                    log("Quiz submission failed. Response: " + JSON.stringify(data));
+                    // Optionally display an error message to the user
+                }
+            })
+            .catch(error => {
+                log(`Error submitting quiz: ${error.message}`);
+                // Optionally display an error message to the user
+            });
+        }
+
+        // Function to display results
+        function displayResults() {
+            const resultsArea = document.getElementById('results-area');
+            resultsArea.innerHTML = `امتیاز شما: ${score} از ${questions.length}`;
+            resultsArea.style.display = 'block';
+            document.getElementById('quiz-area').style.display = 'none';
+        }
+
+        // Function to load a question
+        function loadQuestion() {
+            const questionTitle = document.getElementById('question-title');
+            const optionsDiv = document.getElementById('question-options');
+            const nextButton = document.getElementById('next-question-button');
+            const submitButton = document.getElementById('submit-quiz-button');
+
+            if (currentQuestionIndex < questions.length) {
+                const currentQuestion = questions[currentQuestionIndex];
+                questionTitle.textContent = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+                optionsDiv.innerHTML = ''; // Clear previous options
+
+                currentQuestion.options.forEach((option, index) => {
+                    const label = document.createElement('label');
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = 'answer';
+                    radio.value = index;
+                    radio.dataset.questionIndex = currentQuestionIndex; // Store question index
+
+                    label.appendChild(radio);
+                    label.appendChild(document.createTextNode(option));
+                    optionsDiv.appendChild(label);
+
+                    // Add event listener to handle answer selection
+                    radio.addEventListener('change', () => {
+                        selectedAnswerIndex = index;
+                        log(`Answer selected for question ${currentQuestionIndex + 1}: ${option}`);
+                    });
+                });
+
+                // Show next button, hide submit button
+                nextButton.style.display = 'inline-block';
+                submitButton.style.display = 'none';
+                log(`Loaded question ${currentQuestionIndex + 1}`);
+
+            } else {
+                // All questions answered, show submit button
+                questionTitle.textContent = "آزمون شما به پایان رسید.";
+                optionsDiv.innerHTML = '';
+                nextButton.style.display = 'none';
+                submitButton.style.display = 'inline-block';
+                log("All questions loaded.");
+            }
+        }
+
+        // Function to handle moving to the next question or submitting
+        function handleNextOrSubmit() {
+            const submitButton = document.getElementById('submit-quiz-button');
+
+            if (submitButton.style.display === 'inline-block') {
+                // If submit button is visible, it means we are done with questions
+                sendDataToSheet();
+            } else {
+                // Otherwise, move to the next question
+                if (selectedAnswerIndex !== null) {
+                    const correctAnswerIndex = questions[currentQuestionIndex].answer;
+                    if (selectedAnswerIndex === correctAnswerIndex) {
+                        score++;
+                        log(`Correct answer for question ${currentQuestionIndex + 1}. Score: ${score}`);
+                    } else {
+                        log(`Incorrect answer for question ${currentQuestionIndex + 1}. Correct was: ${questions[currentQuestionIndex].options[correctAnswerIndex]}`);
+                    }
+                    selectedAnswerIndex = null; // Reset for next question
+                    currentQuestionIndex++;
+                    loadQuestion();
+                } else {
+                    alert("لطفاً یک گزینه را انتخاب کنید.");
+                    log("Attempted to proceed without selecting an answer.");
+                }
+            }
+        }
+
+        // Function to initialize the quiz
+        function initializeQuiz() {
+            log("Initializing quiz...");
+            const loginForm = document.getElementById('login-form');
+            const quizArea = document.getElementById('quiz-area');
+
+            document.getElementById('start-quiz-button').addEventListener('click', () => {
+                studentName = document.getElementById('student-name').value.trim();
+                studentId = document.getElementById('student-id').value.trim();
+
+                if (studentName && studentId) {
+                    log(`Starting quiz for ${studentName} (ID: ${studentId})`);
+                    loginForm.style.display = 'none';
+                    quizArea.style.display = 'block';
+                    loadQuestion();
+                } else {
+                    alert("لطفاً نام و شماره دانشجویی خود را وارد کنید.");
+                    log("Login failed: Missing name or ID.");
+                }
+            });
+
+            document.getElementById('next-question-button').addEventListener('click', handleNextOrSubmit);
+            submitButton.addEventListener('click', handleNextOrSubmit); // Submit button also uses handleNextOrSubmit
+
+            document.getElementById('test-connection-button').addEventListener('click', testConnection);
+
+            log("Quiz initialized.");
+        }
+
+        // --- Event Listeners ---
+        // Initialize the quiz when the window loads
+        window.onload = initializeQuiz;
+
+        // --- Anti-Cheat Mechanism (Basic) ---
+        // Detect if the user leaves the tab
+        let hidden;
+        let visibilityChange;
+        if (typeof document.hidden !== "undefined") {
+            hidden = "hidden";
+            visibilityChange = "visibilitychange";
+        } else if (typeof document.msHidden !== "undefined") {
+            hidden = "msHidden";
+            visibilityChange = "msvisibilitychange";
+        } else if (typeof document.webkitHidden !== "undefined") {
+            hidden = "webkitHidden";
+            visibilityChange = "webkitvisibilitychange";
+        }
+
+        if (hidden && visibilityChange) {
+            document.addEventListener(visibilityChange, function() {
+                if (document[hidden]) {
+                    log("User left the quiz tab!");
+                    // You could potentially submit the quiz here automatically
+                    // sendDataToSheet();
+                    // alert("You left the quiz tab. Your progress might be lost or submitted.");
+                } else {
+                    log("User returned to the quiz tab.");
+                }
+            }, false);
+        }
+
+        // Handle beforeunload event (e.g., if user tries to close the tab/window)
+        window.addEventListener('beforeunload', function (e) {
+            // Check if the quiz is in progress and not yet submitted
+            if (quizArea.style.display === 'block' && currentQuestionIndex < questions.length) {
+                 // Cancel the event
+                e.preventDefault();
+                 // Chrome requires returnValue to be set
+                e.returnValue = '';
+                log("User attempting to leave the page during the quiz.");
+                // Optionally, you could send partial data here, but be careful with user experience.
+                // sendDataToSheet(); // Uncomment with caution
+            }
         });
-};
 
-// --- Start Exam ---
-function startExam() {
-    studentName = document.getElementById('name').value.trim();
-    studentId = document.getElementById('sid').value.trim();
+    </script>
 
-    if (!studentName || !studentId) {
-        alert("Please enter your name and Student ID.");
-        return;
-    }
-
-    log(`Starting exam for ${studentName} (ID: ${studentId})`);
-    loginForm.classList.add('hidden');
-    quizArea.classList.remove('hidden');
-    renderQuestion();
-}
-
-// --- Render Current Question ---
-function renderQuestion() {
-    selectedAnswerIndex = null; // Reset selection for new question
-    const qNumDisplay = document.getElementById('qnum');
-    const questionText = document.getElementById('question');
-    const optionsContainer = document.getElementById('options');
-    const nextButton = document.getElementById('nextBtn');
-    const progressBar = document.getElementById('progress');
-
-    const currentQuestion = questions[currentQuestionIndex];
-
-    qNumDisplay.innerText = `Question ${(currentQuestionIndex + 1)}/${questions.length}`;
-    questionText.innerText = currentQuestion.q;
-    
-    // Update progress bar
-    const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
-    progressBar.style.width = `${progressPercentage}%`;
-
-    optionsContainer.innerHTML = ''; // Clear previous options
-
-    currentQuestion.a.forEach((option, index) => {
-        const button = document.createElement('button');
-        button.className = 'opt';
-        button.innerText = option;
-        button.onclick = () => selectAnswer(index, button);
-        optionsContainer.appendChild(button);
-    });
-
-    nextButton.classList.add('hidden'); // Hide next button until an answer is selected
-}
-
-// --- Select Answer ---
-function selectAnswer(index, button) {
-    selectedAnswerIndex = index;
-    // Remove 'selected' class from all buttons
-    document.querySelectorAll('.opt').forEach(btn => btn.classList.remove('selected'));
-    // Add 'selected' class to the clicked button
-    button.classList.add('selected');
-    document.getElementById('nextBtn').classList.remove('hidden'); // Show next button
-}
-
-// --- Next Question ---
-function nextQuestion() {
-    if (selectedAnswerIndex === null) {
-        alert("Please select an answer first!");
-        return;
-    }
-
-    // Check if the selected answer is correct
-    if (selectedAnswerIndex === questions[currentQuestionIndex].c) {
-        score++;
-        log(`Correct answer for Q${(currentQuestionIndex + 1)}`);
-    } else {
-        log(`Wrong answer for Q${(currentQuestionIndex + 1)}. Correct was index ${questions[currentQuestionIndex].c}`);
-    }
-
-    currentQuestionIndex++;
-
-    if (currentQuestionIndex < questions.length) {
-        renderQuestion(); // Render next question
-    } else {
-        finishExam(); // End the quiz
-    }
-}
-
-// --- Finish Exam ---
-function finishExam() {
-    log("Exam finished. Calculating score...");
-    quizArea.classList.add('hidden');
-    resultArea.classList.remove('hidden');
-    document.getElementById('scoreResult').innerText = `Your Score: ${score}/${questions.length}`;
-    
-    // Prepare data for Google Sheet
-    studentData = {
-        name: studentName,
-        id: studentId,
-        score: `${score}/${questions.length}`,
-        ip: userIp,
-        device: navigator.platform,
-        time: new Date().toLocaleString('fa-IR') // Using Persian locale for date/time
-    };
-
-    sendDataToSheet(studentData);
-}
-
-// --- Send Data to Google Sheet ---
-function sendDataToSheet(dataToSend) {
-    log("Attempting to send data to Google Sheet...");
-    fetch(SHEET_URL, {
-        method: 'POST',
-        body: JSON.stringify(dataToSend),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            log(`HTTP error! Status: ${response.status}`);
-            return response.text().then(text => { throw new Error(`Server responded with ${response.status}: ${text}`); });
-        }
-        return response.text();
-    })
-    .then(data => {
-        log(`Google Sheet response: ${data}`);
-        if (data === "success") {
-            document.getElementById('status-msg').innerText = "Your results have been successfully submitted!";
-            document.getElementById('status-msg').style.color = "#22c55e"; // Green
-        } else {
-            throw new Error("Submission did not return 'success'.");
-        }
-    })
-    .catch(error => {
-        log(`Error sending data to Google Sheet: ${error.message}`);
-        document.getElementById('status-msg').innerText = `Submission failed: ${error.message}. Please try again or contact admin.`;
-        document.getElementById('status-msg').style.color = "#ef4444"; // Red
-        // Optionally, you could try to send via Telegram here as a fallback
-    });
-}
-
-// --- Test Connection to Google Sheet ---
-function testSheetConnection() {
-    log("Testing connection to Google Sheet...");
-    const testData = {
-        name: "Test User",
-        id: "TEST123",
-        score: "N/A",
-        ip: userIp,
-        device: navigator.platform,
-        time: new Date().toLocaleString('fa-IR')
-    };
-
-    fetch(SHEET_URL, {
-        method: 'POST',
-        body: JSON.stringify(testData),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            log(`Test HTTP error! Status: ${response.status}`);
-            return response.text().then(text => { throw new Error(`Server responded with ${response.status}: ${text}`); });
-        }
-        return response.text();
-    })
-    .then(data => {
-        log(`Test response: ${data}`);
-        if (data === "success") {
-            alert("Test successful! Check your Google Sheet for 'Test User' entry.");
-            log("Test successful. Check Google Sheet.");
-        } else {
-            throw new Error("Test submission did not return 'success'.");
-        }
-    })
-    .catch(error => {
-        log(`Error during test submission: ${error.message}`);
-        alert(`Test failed: ${error.message}. Check the console (F12) or debug log for details.`);
-    });
-}
-
-// --- Anti-cheat: Detect tab switching ---
-window.addEventListener('blur', () => {
-    if (quizArea.classList.contains('hidden')) return; // Only trigger if quiz is active
-    log("User switched tabs or left the page!");
-    // You could send a notification to your sheet or a separate log here
-    // For simplicity, just logging for now. To send to sheet:
-     const cheatData = {
-        name: studentName || "Unknown Student", // Use name if available
-        id: studentId || "Unknown ID",
-        score: "Cheat Detected", // Mark as cheat
-        ip: userIp,
-        device: navigator.platform,
-        time: new Date().toLocaleString('fa-IR')
-    };
-    sendDataToSheet(cheatData); // Send this as a cheat alert
-    alert("Leaving the quiz page is not allowed and will be registered!");
-});
-
-</script>
 </body>
 </html>
